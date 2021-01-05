@@ -13,12 +13,47 @@ Nach dem Aufsetzen der [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung mit
 
 ## Übungen
 
+* [Infrastruktur](#Infrastruktur)
 * [Funktionen](#Funktionen)
 * [Ressourcenpools](#Ressourcenpools)
+* [VLANs](#VLANs)
+* [VPNs](#VPNs)
 
+### Infrastruktur
 
-### Verbinden mit [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung
+Als Infrastruktur wird die [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung verwendet. 
 
+Diese Implementiert eine private Cloud und ist mittels VPNs (WireGuard) erreichbar.
+
+**Das Vorgehen ist wie folgt:**
+
+VPN [WireGuard](https://www.wireguard.com/install/) auf dem lokalen Notebook/PC installieren.
+
+Vervollständigen der WireGuard Template Datei, z.B. `wg1-template.conf` mit Ihrer WireGuard IP-Adresse und dem privaten Key.
+
+Dazu sind die Einträge <replace IP> und <replace Key> durch Ihre Werte, laut der Liste in den Unterlagen, zu ersetzen.
+
+Die Konfigurationsdatei sieht in etwa so aus:
+
+    [Interface]
+    Address = <replace IP>/24
+    PrivateKey = <replace Key>
+    
+    [Peer]
+    PublicKey = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    Endpoint  = yyyyyyyyyyyyyyyyyy:518zz
+    
+    AllowedIPs = 192.168.xx.0/24
+
+Starten Sie die WireGuard Software und fügen Sie die ergänzte WireGuard Vorlage als Tunnel hinzu:
+
+![](images/wireguard-add.png)
+
+Und aktivieren Sie den Tunnel:
+
+![](images/wireguard-activate.png)
+
+Nun befinden wir uns im VPN, wo sich auch die [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung befindet und können diese mittels [http://w.x.y.z:5240](http://w.x.y.z:5240) anwählen.
 
 ### Funktionen
 ***
@@ -90,6 +125,28 @@ Von der Geschäftsleitung, ist der Wunsch gekommen, die Netzwerke für des Rechn
 
 Die traditionelle Art, diese Netzwerke zu trennen (ausser vollständig separate Netzwerke zu erstellen ), wäre ein VLAN. Glücklicherweise unterstützt MAAS mehrere VLANs. Wenn Sie Ihrem Design eine höhere Ebene hinzufügen, finden Sie sich mit dieser aktualisierten Netzwerktopologie wieder:
 
-* **Einkauf, Verkauf, Versand**: Lieferanten, Kunden, Produkte, Bestellungen, Versandinformationen
-* **Rechnungswesen**: Rechnungsstellung
+* **Einkauf, Verkauf, Versand**: Lieferanten, Kunden, Produkte, Bestellungen
+* **Rechnungswesen**: Rechnungsstellung, Versandinformationen
+
+### VPNs
+***
+> [⇧ **Nach oben**](#Übungen)
+
+![](images/vpns.png)
+
+Getrennte Netzwerke mittels VPNs
+- - -
+
+*Das konventionelle VPN bezeichnet ein virtuelles privates (in sich geschlossenes) Kommunikationsnetz. Virtuell in dem Sinne, dass es sich nicht um eine eigene physische Verbindung handelt, sondern um ein bestehendes Kommunikationsnetz, das als Transportmedium verwendet wird. Das VPN dient dazu, Teilnehmer des bestehenden Kommunikationsnetzes an ein anderes Netz zu binden.*
+
+In der [lernMAAS](https://github.com/mc-b/lernmaas) werden die VPN Informationen in [Availability zones (AZs)](https://maas.io/docs/snap/2.9/ui/availability-zones) hinterlegt.
+
+Durch die Verwendung von mehreren VPNs können wir, wie bei VLANs, die Netzwerke trennen.
+
+* AZ: **EinkaufVerkaufVersand**: Lieferanten, Kunden, Produkte, Bestellungen
+* AZ: **Rechnungswesen**: Rechnungsstellung, Versandinformationen
+
+Die `Availability zone` kann via `Pulldownmenu`, Spalte `Zone/Spaces` der VM zugewiesen werden.
+
+Die Konfiguration der Notebooks/PCs erfolgt wie unter Punkt [Infrastruktur](#Infrastruktur) beschrieben.
 
