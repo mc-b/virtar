@@ -23,7 +23,7 @@ Nach dem Aufsetzen der [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung mit
 
 Als Infrastruktur wird die [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung verwendet. 
 
-Diese Implementiert eine private Cloud und ist mittels VPNs (WireGuard) erreichbar.
+Diese Implementiert eine Private Cloud und ist mittels VPNs (WireGuard) erreichbar.
 
 **Das Vorgehen ist wie folgt:**
 
@@ -150,3 +150,26 @@ Die `Availability zone` kann via `Pulldownmenu`, Spalte `Zone/Spaces` der VM zug
 
 Die Konfiguration der Notebooks/PCs erfolgt wie unter Punkt [Infrastruktur](#Infrastruktur) beschrieben.
 
+Die Abteilung Rechnungswesen möchte zusätzlich Zugriff auf die VMs der anderen Abteilungen haben.
+
+Das können wir durch eine Erweiterung der lokalen WireGuard Konfigurationsdatei erreichen, in dem wir eine zweite IP-Adresse (Interface) und einen zweiten Peer hinzufügen.
+
+Die Konfigurationsdatei sieht in etwa so aus:
+
+    [Interface]
+    Address = 192.168.10.xx/24,192.168.11.xx/24
+    PrivateKey = <replace Key>
+    
+    # 1tes VPN
+    [Peer]
+    PublicKey = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    Endpoint  = yyyyyyyyyyyyyyyyyy:518zz
+    AllowedIPs = 192.168.10.0/24
+    
+    # 2tes VPN
+    [Peer]
+    PublicKey = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    Endpoint  = yyyyyyyyyyyyyyyyyy:518zz
+    AllowedIPs = 192.168.11.0/24    
+    
+**Hinweis**: Auf dem WireGuard Gateway müssen die IP-Adressen den gleichen Public Key verwenden.  
