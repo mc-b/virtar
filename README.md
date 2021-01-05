@@ -4,7 +4,7 @@ Virtualisierung ist die Basistechnologie hinter den Cloud-Technologien und wird 
 
 ## Voraussetzungen
 
-Der Kurs benötigt eine [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung.
+Der Kurs benötigt eine [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung mit [MAAS](https://maas.io) ab Version 2.9.
 
 Stellen Sie sich vor, Sie sind der IT-Administrator eines KMUs. Nennen wir es "Firma XYZ". 
 
@@ -18,6 +18,10 @@ Nach dem Aufsetzen der [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung mit
 * [Ressourcenpools](#Ressourcenpools)
 * [VLANs](#VLANs)
 * [VPNs](#VPNs)
+* [Infrastruktur als Code](#Infrastruktur-als-Code)
+* [Linux Namespaces und Container](https://github.com/mc-b/duk/tree/master/linuxns)
+* [Microservices mit Kubernetes](https://github.com/mc-b/duk/blob/master/data/jupyter/demo/Microservices-REST.ipynb)
+* [Serverless](https://github.com/mc-b/duk-demo/blob/master/data/jupyter/demo/Serverless-kubeless.ipynb)
 
 ### Infrastruktur
 
@@ -173,3 +177,43 @@ Die Konfigurationsdatei sieht in etwa so aus:
     AllowedIPs = 192.168.11.0/24    
     
 **Hinweis**: Auf dem WireGuard Gateway müssen die IP-Adressen den gleichen Public Key verwenden.  
+
+### Infrastruktur als Code
+***
+
+> [⇧ **Nach oben**](#Übungen)
+
+![](images/cloud-init.png)
+
+- - -
+
+Infrastruktur als Code ist ein Paradigma (grundsätzliche Denkweise) zur Infrastruktur-Automation.
+
+Es basiert auf konsistenten und wiederholbaren Definitionen (Code) für die Bereitstellung von Systemen und deren Konfiguration.
+
+Produkte sind u.a. Puppet, Chef, Cloud-init, Vagrant, etc.
+
+MAAS Unterstützt dieses Paradigma mittels [Cloud-init](https://cloudinit.readthedocs.io/en/latest/). Mittels selektionieren einer oder mehrere VMs erscheint obiger [Dialog](https://maas.io/docs/snap/2.9/ui/custom-machine-setup#heading--cloud-init), wo ein Cloud-init Script angegeben werden kann.
+
+Beispiel für Scripts sind:
+
+    #cloud-config - Installiert den nginx Web Server
+    packages:
+     - nginx
+
+
+
+    #cloud-config - Erstellt eine Intro Seite und installiert den Apache Web Server
+    packages:
+     - git
+    runcmd:
+     - git clone https://github.com/mc-b/lernmaas /home/ubuntu/lernmaas
+     - git clone https://github.com/mc-b/virtar /home/ubuntu/virtar
+     - cd /home/ubuntu/virtar
+     - sudo bash -x /home/ubuntu/lernmaas/helper/intro
+     - sudo cp -rp images /var/www/html/ 
+
+**Links**
+
+* [Offizielle Cloud-init Beispiele](https://cloudinit.readthedocs.io/en/latest/topics/examples.html)
+* [lernMAAS und Cloud-init in der Public Cloud](https://github.com/mc-b/lernmaas/tree/master/doc/Cloud)
