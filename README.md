@@ -20,8 +20,8 @@ Nach dem Aufsetzen der [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung mit
 * [VPNs](#VPNs)
 * [Infrastruktur als Code](#Infrastruktur-als-Code)
 * [Linux Namespaces und Container](#Linux-Namespaces-und-Container)
-* [Microservices mit Kubernetes](https://github.com/mc-b/duk/blob/master/data/jupyter/demo/Microservices-REST.ipynb)
-* [Serverless](https://github.com/mc-b/duk-demo/blob/master/data/jupyter/demo/Serverless-kubeless.ipynb)
+* [Kubernetes](#Kubernetes)
+* [Serverless](#Serverless)
 
 ### Infrastruktur
 
@@ -282,11 +282,11 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
       - sudo mv /tmp/kubectl-hns /usr/local/bin
 
    
-Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes. Und zum Schluss die Kubernetes Erweiterung für Hierarchische Kubernetes Namespaces.
+Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes. Und zum Schluss die Kubernetes Erweiterung für [Hierarchische Kubernetes Namespaces](https://kubernetes.io/blog/2020/08/14/introducing-hierarchical-namespaces/).
 
 Nach der Installation, sind wir bereit Container zu starten.
 
-#### unshare -Alpine Linux in Linux Namespace betreiben
+#### `unshare` - Alpine Linux in Linux Namespace betreiben
 
 Folgendes Beispiel holt Alpine Linux entpackt diese im Verzeichnis `myalpine` und wechselt mittels `unshare` 
 den Linux Namespaces und setzt den Root `/` auf `myalpine`.
@@ -304,14 +304,101 @@ den Linux Namespaces und setzt den Root `/` auf `myalpine`.
     apk add vim
     exit
 
-#### Docker - Wechsel in Container mittels `nsenter` von Linux
+#### `nsenter` - Wechsel in Linux Namespace des laufenden Containers
 
-    docker run --name mycontainer --rm -d dockercloud/hello-world
     kubectl run lieferanten --image dockercloud/hello-world --image-pull-policy="IfNotPresent" --restart=Never --labels="function=einkauf,mandant=xyz"
     sudo nsenter -t $(sudo lsns -t pid | tail -1  | awk '{ print $4 }') -a sh
     pstree -p  # Sicht innerhalb  des Containers (Namespace)
     ls -l
     cat /etc/issue
     exit
+    kubectl delete pod/lieferanten
 
+### Kubernetes
+***
+
+> [⇧ **Nach oben**](#Übungen)
+
+[![](https://img.youtube.com/vi/PH-2FfFD2PU/0.jpg)](https://www.youtube.com/watch?v=PH-2FfFD2PU)
+
+Kubernetes in 5 Minuten auf YouTube
+
+---
+
+Durch die Verwendung von Kubernetes Namespaces und Container (Pods) können wir, die gleiche Umgebung mit Containern statt VMs, aufbauen:
+
+* **Einkauf, Verkauf, Versand**: Lieferanten, Kunden, Produkte, Bestellungen
+* **Rechnungswesen**: Rechnungsstellung, Versandinformationen.
+
+    export MANDANT=xyz
+    kubectl create namespace ${MANDANT}
+    kubectl hns set ${MANDANT} --allowCascadingDeletion
+    kubectl-hns create evv-${MANDANT} -n ${MANDANT}
+    kubectl-hns create rw-${MANDANT}  -n ${MANDANT}
     
+    export NAMESPACE=evv
+    for func in lieferanten kunden produkte bestellungen
+    do
+        cat <<%EOF% | kubectl --namespace ${NAMESPACE}-${MANDANT} apply -f -
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            name: ${func}
+            mandant: ${MANDANT}
+          name: ${func}
+        spec:
+          containers:
+          - image: dockercloud/hello-world
+            name: ${func}
+    %EOF%
+            
+       cat <<%EOF% | kubectl --namespace ${NAMESPACE}-${MANDANT} apply -f -            
+        apiVersion: v1
+        kind: Service
+        metadata:
+          labels:
+            name: ${func}
+            mandant: ${MANDANT}
+          name: ${func}
+        spec:
+          ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+          selector:
+            name: ${func}
+    %EOF%
+        cat <<%EOF% | kubectl --namespace ${NAMESPACE}-${MANDANT} apply -f -            
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          labels:
+            name: ${func}
+            mandant: ${MANDANT}        
+          name: ${func}
+          annotations:
+            nginx.ingress.kubernetes.io/rewrite-target: /
+        spec:
+          rules:
+          - http:
+              paths:
+              - path: /${MANDANT}/${func}
+                pathType: Prefix
+                backend:
+                  service:
+                    name: ${func}
+                    port:
+                      number: 80        
+    %EOF%
+    done
+
+Das Ergebnis können wir wie folgt anschauen:
+
+    kubectl get pods,services,ingress --all-namespaces -l mandant=${MANDANT} -o wide
+
+Und im Browser, in dem wir die URL https://<ip-cluster/${MANDANT}/lieferanten öffnen.
+    
+    
+    
+ 
