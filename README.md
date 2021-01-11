@@ -330,7 +330,7 @@ Durch die Verwendung von Kubernetes Namespaces und Container (Pods) können wir,
 * **Einkauf, Verkauf, Versand**: Lieferanten, Kunden, Produkte, Bestellungen
 * **Rechnungswesen**: Rechnungsstellung, Versandinformationen.
 
-
+- - -
 
     export MANDANT=xyz
     kubectl create namespace ${MANDANT}
