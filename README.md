@@ -398,7 +398,56 @@ Das Ergebnis können wir wie folgt anschauen:
     kubectl get pods,services,ingress --all-namespaces -l mandant=${MANDANT} -o wide
 
 Und im Browser, in dem wir die URL https://<ip-cluster/${MANDANT}/lieferanten öffnen.
+
+Um Schluss können wir die ganze Umgebung wieder löschen:
+
+    kubectl delete namespace ${MANDANT}
     
+### Serverless
+***
+
+> [⇧ **Nach oben**](#Übungen)
+
+[![](https://img.youtube.com/vi/AxZuQIJUX4s/0.jpg)](https://www.youtube.com/watch?v=AxZuQIJUX4s)
+
+Einführung in kubeless
+
+---
+
+Was unseren Container fehlt, sind unterschiedliche Programme. Diese können auf die traditionelle Art, mittels Dockerfile erstellt werden oder mittels Function as a Service.
+
+Wir entscheiden uns für Function as a Service und verwenden dazu Kubernetes mit dem Produkt [kubeless](https://kubeless.io/).
+
+Dazu erstellen wir ein einfaches Script, zu Testzwecken, welches wir für alle Container wiederverwenden wollen.
+
+    cat <<%EOF% >function.py
+    def myfunction(event, context):
+      print event
+      return event['data']
+    %EOF%
     
+Diese Function können wir nun für all unsere Container veröffentlichen:
+
+    export MANDANT=xyz
+    kubectl create namespace ${MANDANT}
+    kubectl hns set ${MANDANT} --allowCascadingDeletion
+    kubectl-hns create evv-${MANDANT} -n ${MANDANT}
+    kubectl-hns create rw-${MANDANT}  -n ${MANDANT}    
     
- 
+    export NAMESPACE=evv
+    export func="lieferanten"
+    kubeless function deploy ${func} --runtime python2.7 \
+                                     --from-file function.py \
+                                     --handler ${func}.myfunction \
+                                     --namespace ${NAMESPACE}-${MANDANT}
+
+Die so erstellten Funktionen können wir anschauen mittels:
+
+    kubeless function ls --namespace ${NAMESPACE}-${MANDANT}
+    
+Und die Funktion aufrufen:
+
+    kubeless function call lieferanten --data 'lieferanten' --namespace ${NAMESPACE}-${MANDANT}
+                     
+                                     
+                                        
