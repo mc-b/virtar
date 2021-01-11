@@ -91,6 +91,10 @@ Ein [VM Hosts](https://maas.io/docs/snap/2.9/ui/adding-a-vm-host) ist eine Masch
 
 **Hinweis**: bei mehreren Mandanten verwenden Sie einen anderen Prefix als "XYZ" und beginnen die Nummerierung bei 20.
 
+**Links**
+
+* [Give me an example of MAAS](https://maas.io/docs/maas-example-config)
+
 ### Ressourcenpools
 ***
 > [⇧ **Nach oben**](#Übungen)
@@ -125,13 +129,19 @@ Der `Resource Pool` kann anschliessend via `Pulldownmenu`, Spalte `Pool/Note` de
 Getrennte Netzwerke mittels VLANs
 - - -
 
+*Ein Virtual Local Area Network (VLAN) ist ein logisches Teilnetz innerhalb eines physischen Netzwerks. Ein VLAN trennt physische Netze in Teilnetze auf, indem es dafür sorgt, dass VLAN-fähige Switches Frames (Datenpakete) nicht in ein anderes VLAN weiterleiten (obwohl die Teilnetze an gemeinsame Switches angeschlossen sein können).*
+
 Von der Geschäftsleitung, ist der Wunsch gekommen, die Netzwerke für des Rechnungswesen vom Rest zu trennen.
 
 Die traditionelle Art, diese Netzwerke zu trennen (ausser vollständig separate Netzwerke zu erstellen ), wäre ein VLAN. Glücklicherweise unterstützt MAAS mehrere VLANs. Wenn Sie Ihrem Design eine höhere Ebene hinzufügen, finden Sie sich mit dieser aktualisierten Netzwerktopologie wieder:
 
 * **Einkauf, Verkauf, Versand**: Lieferanten, Kunden, Produkte, Bestellungen
-* **Rechnungswesen**: Rechnungsstellung, Versandinformationen
+* **Rechnungswesen**: Rechnungsstellung, Versandinformationen.
 
+Die VLANs können über den Tab `Subnets` über `Add` angelegt werden. Erfasst werden muss ein Name (**fett**) und eine eindeutige Nummer zwischen 2 - 4094. Anschliessend sind die Subnetze, zu den VLAN zu erfassen. 
+
+Die so definierten VLANs können dann den VMs über den Tab `Network` mittels `Add alias or VLAN zugewiesen werden.
+ 
 ### VPNs
 ***
 > [⇧ **Nach oben**](#Übungen)
@@ -193,7 +203,9 @@ Es basiert auf konsistenten und wiederholbaren Definitionen (Code) für die Bere
 
 Produkte sind u.a. Puppet, Chef, Cloud-init, Vagrant, etc.
 
-MAAS Unterstützt dieses Paradigma mittels [Cloud-init](https://cloudinit.readthedocs.io/en/latest/). Mittels selektionieren einer oder mehrere VMs erscheint obiger [Dialog](https://maas.io/docs/snap/2.9/ui/custom-machine-setup#heading--cloud-init), wo ein Cloud-init Script angegeben werden kann.
+MAAS Unterstützt dieses Paradigma mittels [Cloud-init](https://cloudinit.readthedocs.io/en/latest/). 
+
+Mittels selektionieren einer oder mehrere VMs und Anwahl des Pulldownmenus `Deploy` erscheint obiger [Dialog](https://maas.io/docs/snap/2.9/ui/custom-machine-setup#heading--cloud-init), wo ein Cloud-init Script angegeben werden kann.
 
 Beispiel für Scripts sind:
 
@@ -201,7 +213,7 @@ Beispiel für Scripts sind:
     packages:
      - nginx
 
-
+- - -
 
     #cloud-config - Erstellt eine Intro Seite und installiert den Apache Web Server
     packages:
