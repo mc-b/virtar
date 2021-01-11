@@ -19,7 +19,7 @@ Nach dem Aufsetzen der [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung mit
 * [VLANs](#VLANs)
 * [VPNs](#VPNs)
 * [Infrastruktur als Code](#Infrastruktur-als-Code)
-* [Linux Namespaces und Container](https://github.com/mc-b/duk/tree/master/linuxns)
+* [Linux Namespaces und Container](#Linux-Namespaces-und-Container)
 * [Microservices mit Kubernetes](https://github.com/mc-b/duk/blob/master/data/jupyter/demo/Microservices-REST.ipynb)
 * [Serverless](https://github.com/mc-b/duk-demo/blob/master/data/jupyter/demo/Serverless-kubeless.ipynb)
 
@@ -229,3 +229,89 @@ Beispiel für Scripts sind:
 
 * [Offizielle Cloud-init Beispiele](https://cloudinit.readthedocs.io/en/latest/topics/examples.html)
 * [lernMAAS und Cloud-init in der Public Cloud](https://github.com/mc-b/lernmaas/tree/master/doc/Cloud)
+
+### Linux Namespaces und Container
+***
+
+> [⇧ **Nach oben**](#Übungen)
+
+![](images/linux-namespaces.png)
+
+- - -
+
+*Container sind ein altes Konzept und gehen bis auf die Anfänge von UNIX zurück. Sie basieren, vereinfacht, auf Linux Namespaces.*
+
+Dazu benötigen wir zuerst eine VM mit Kubernetes und einem Container Runtime.
+
+Dazu erstellen wir eine neue VM mit 2 CPU Cores, 4096 GB RAM und 16 GB Storage. Der Name der VM lautet `XYZ-16-kaas> (XYZ durch eigenes Kürzel ersetzen und Nummer durch eigenen Nummernbereich).
+
+Deployt wird die VMs mit folgenden `Cloud-init` Script:
+
+    #cloud-config
+    users:
+      - name: ubuntu
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        groups: users, admin
+        home: /home/ubuntu
+        shell: /bin/bash
+        lock_passwd: false
+        plain_text_passwd: 'password'        
+    # login ssh and console with password
+    ssh_pwauth: true
+    disable_root: false    
+    packages:
+      - unzip
+    runcmd:
+      - sudo snap install microk8s --classic --channel=1.19
+      - sudo usermod -a -G microk8s ubuntu
+      - sudo microk8s enable dns storage ingress
+      - sudo mkdir -p /home/ubuntu/.kube
+      - sudo microk8s config >/home/ubuntu/.kube/config
+      - sudo chown -f -R ubuntu /home/ubuntu/.kube
+      - sudo echo 'alias kubectl="microk8s kubectl"' >>/home/ubuntu/.bashrc 
+      - export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
+      - microk8s kubectl create ns kubeless
+      - microk8s kubectl apply -f https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless-$RELEASE.yaml
+      - cd /tmp; curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless_linux-amd64.zip && unzip kubeless_linux-amd64.zip
+      - sudo mv /tmp/bundles/kubeless_linux-amd64/kubeless /usr/local/bin/
+      - export HNC_VERSION=v0.7.0
+      - export HNC_PLATFORM=linux_amd64
+      - microk8s kubectl apply -f https://github.com/kubernetes-sigs/multi-tenancy/releases/download/hnc-${HNC_VERSION}/hnc-manager.yaml
+      - curl -L https://github.com/kubernetes-sigs/multi-tenancy/releases/download/hnc-${HNC_VERSION}/kubectl-hns_${HNC_PLATFORM} -o /tmp/kubectl-hns
+      - chmod +x /tmp/kubectl-hns
+      - sudo mv /tmp/kubectl-hns /usr/local/bin
+
+   
+Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes. Und zum Schluss die Kubernetes Erweiterung für Hierarchische Kubernetes Namespaces.
+
+Nach der Installation, sind wir bereit Container zu starten.
+
+#### unshare -Alpine Linux in Linux Namespace betreiben
+
+Folgendes Beispiel holt Alpine Linux entpackt diese im Verzeichnis `myalpine` und wechselt mittels `unshare` 
+den Linux Namespaces und setzt den Root `/` auf `myalpine`.
+
+    mkdir myalpine
+    cd myalpine
+    wget https://github.com/alpinelinux/docker-alpine/raw/9f43992677cdb66a1ecbefe3bf409113b5f2127f/x86_64/alpine-minirootfs-3.12.3-x86_64.tar.gz -O - | tar xvzf -
+    sudo cp /etc/resolv.conf etc/
+    sudo unshare -p --fork --mount-proc -R . sh
+    cat /etc/issue
+    pstree -p -n                # schlägt fehl, kein ubuntu Linux
+    pstree -p
+    # weitere Software installieren
+    apk update
+    apk add vim
+    exit
+
+#### Docker - Wechsel in Container mittels `nsenter` von Linux
+
+    docker run --name mycontainer --rm -d dockercloud/hello-world
+    kubectl run lieferanten --image dockercloud/hello-world --image-pull-policy="IfNotPresent" --restart=Never --labels="function=einkauf,mandant=xyz"
+    sudo nsenter -t $(sudo lsns -t pid | tail -1  | awk '{ print $4 }') -a sh
+    pstree -p  # Sicht innerhalb  des Containers (Namespace)
+    ls -l
+    cat /etc/issue
+    exit
+
+    
