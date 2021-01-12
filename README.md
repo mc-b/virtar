@@ -284,7 +284,13 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
    
 Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes. Und zum Schluss die Kubernetes Erweiterung für [Hierarchische Kubernetes Namespaces](https://kubernetes.io/blog/2020/08/14/introducing-hierarchical-namespaces/).
 
-Nach der Installation, sind wir bereit Container zu starten.
+Nach der Installation, sind wir bereit Container zu starten. Dazu müssen wir uns mittels [Secure Shell (ssh)](https://de.wikipedia.org/wiki/Secure_Shell) mit der VM verbinden. Dazu eignet sich am besten [bitvise](https://www.bitvise.com/).
+
+![](images/bitvise.png)
+
+- - -
+
+Nach der Installation von [bitvise](https://www.bitvise.com/) mit der IP und User `ubuntu` und Password `password` verbinden.
 
 #### `unshare` - Alpine Linux in Linux Namespace betreiben
 
@@ -425,7 +431,7 @@ Dazu erstellen wir ein einfaches Script, zu Testzwecken, welches wir für alle C
     cat <<%EOF% >function.py
     def myfunction(event, context):
       print event
-      return event['data']
+      return 'KMU Beispiel'
     %EOF%
     
 Diese Function können wir nun für all unsere Container veröffentlichen:
@@ -449,7 +455,39 @@ Die so erstellten Funktionen können wir anschauen mittels:
     
 Und die Funktion aufrufen:
 
-    kubeless function call lieferanten --data 'lieferanten' --namespace ${NAMESPACE}-${MANDANT}
-                     
-                                     
-                                        
+    kubeless function call ${func} --namespace ${NAMESPACE}-${MANDANT}
+   
+Erstellt wurde ein Pod, ein Service und weitere Kubernetes Ressourcen welche wir wie folgt kontrollieren können:
+
+    kubectl get pods,services --namespace ${NAMESPACE}-${MANDANT}
+                        
+Soll der Service, wie im vorherigen Beispiel, via URL erreichbar sein, brauchen wir noch eine Ingress Ressource. Laut Anleitung von kubeless sollte dies wie folgt funktionieren:
+
+    kubeless trigger http create ${func} --path /${MANDANT}/${func} -n ${NAMESPACE}-${MANDANT} --function-name ${func}                                     
+ 
+Leider wurde keine Ingress Ressource erzeugt weshalb wir auf auf YAML zurückgreifen müssen:
+
+    cat <<%EOF% | kubectl --namespace ${NAMESPACE}-${MANDANT} apply -f -            
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      labels:
+        name: ${func}
+        mandant: ${MANDANT}        
+      name: ${func}
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /
+    spec:
+      rules:
+      - http:
+          paths:
+          - path: /${MANDANT}/${func}
+            pathType: Prefix
+            backend:
+              service:
+                name: ${func}
+                port:
+                  number: 8080        
+    %EOF%
+                                       
+Das erzeugt die gewünschte Ingress Ressource und wir können die Ausgabe des Scripts im Browser via URL https://<ip-cluster/${MANDANT}/lieferanten anschauen.
