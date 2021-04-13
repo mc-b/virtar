@@ -294,7 +294,9 @@ Nach der Installation von [bitvise](https://www.bitvise.com/) mit der IP und Use
 
 #### `unshare` - Alpine Linux in Linux Namespace betreiben
 
-Folgendes Beispiel holt Alpine Linux entpackt diese im Verzeichnis `myalpine` und wechselt mittels `unshare` 
+Dazu verwenden wir den Linux Befehl [unshare](http://manpages.ubuntu.com/manpages/bionic/man1/unshare.1.html) mit dem wir den Linux Namespace wechseln können und die Linux [Alpine](https://alpinelinux.org/) Distribution.
+
+Das Beispiel holt Alpine Linux entpackt diese im Verzeichnis `myalpine` und wechselt mittels `unshare` 
 den Linux Namespaces und setzt den Root `/` auf `myalpine`.
 
     mkdir myalpine
@@ -302,12 +304,18 @@ den Linux Namespaces und setzt den Root `/` auf `myalpine`.
     wget https://github.com/alpinelinux/docker-alpine/raw/9f43992677cdb66a1ecbefe3bf409113b5f2127f/x86_64/alpine-minirootfs-3.12.3-x86_64.tar.gz -O - | tar xvzf -
     sudo cp /etc/resolv.conf etc/
     sudo unshare -p --fork --mount-proc -R . sh
+    
+Ab hier befinden wir uns im Container, mit eigenem Dateisystem und Prozesshierarchie    
+    
     cat /etc/issue
     pstree -p -n                # schlägt fehl, kein ubuntu Linux
     pstree -p
     # weitere Software installieren
     apk update
     apk add vim
+    
+Um Schluss können wir den Container verlassen und zurück in die VM
+    
     exit
 
 #### `nsenter` - Wechsel in Linux Namespace des laufenden Containers
