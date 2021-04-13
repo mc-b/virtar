@@ -262,13 +262,13 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
     packages:
       - unzip
     runcmd:
-      - sudo snap install microk8s --classic --channel=1.19
+      - sudo snap install microk8s --classic
       - sudo usermod -a -G microk8s ubuntu
       - sudo microk8s enable dns storage ingress
       - sudo mkdir -p /home/ubuntu/.kube
       - sudo microk8s config >/home/ubuntu/.kube/config
       - sudo chown -f -R ubuntu /home/ubuntu/.kube
-      - sudo echo 'alias kubectl="microk8s kubectl"' >>/home/ubuntu/.bashrc 
+      - sudo snap install kubectl --classic      
       - export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
       - microk8s kubectl create ns kubeless
       - microk8s kubectl apply -f https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless-$RELEASE.yaml
@@ -280,7 +280,6 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
       - curl -L https://github.com/kubernetes-sigs/multi-tenancy/releases/download/hnc-${HNC_VERSION}/kubectl-hns_${HNC_PLATFORM} -o /tmp/kubectl-hns
       - chmod +x /tmp/kubectl-hns
       - sudo mv /tmp/kubectl-hns /usr/local/bin
-
    
 Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes. Und zum Schluss die Kubernetes Erweiterung für [Hierarchische Kubernetes Namespaces](https://kubernetes.io/blog/2020/08/14/introducing-hierarchical-namespaces/).
 
