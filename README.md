@@ -429,8 +429,8 @@ Dazu erstellen wir ein einfaches Script, zu Testzwecken, welches wir für alle C
 
     cat <<%EOF% >function.py
     def myfunction(event, context):
-      print event
-      return 'KMU Beispiel'
+         print ( event )
+         return ( 'KMU Beispiel' )
     %EOF%
     
 Diese Function können wir nun für all unsere Container veröffentlichen:
