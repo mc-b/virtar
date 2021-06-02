@@ -262,12 +262,12 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
     runcmd:
       - sudo snap install microk8s --classic
       - sudo usermod -a -G microk8s ubuntu
-      - sudo microk8s enable dns storage ingress
+      - sudo microk8s enable dns ingress
       - sudo mkdir -p /home/ubuntu/.kube
       - sudo microk8s config >/home/ubuntu/.kube/config
       - sudo chown -f -R ubuntu /home/ubuntu/.kube
       - sudo snap install kubectl --classic 
-      - sudo microk8s kubectl apply -f https://raw.githubusercontent.com/mc-b/duk/master/addons/dashboard-skip-login-no-ingress.yaml           
+      - curl https://raw.githubusercontent.com/mc-b/duk/master/addons/dashboard-skip-login-no-ingress.yaml | sed 's/hostPort: 443/hostPort: 8443/g'  | microk8s kubectl apply -f -
       - export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
       - microk8s kubectl create ns kubeless
       - microk8s kubectl apply -f https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless-$RELEASE.yaml
