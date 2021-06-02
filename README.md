@@ -33,7 +33,7 @@ Diese Implementiert eine Private Cloud und ist mittels VPNs (WireGuard) erreichb
 
 VPN [WireGuard](https://www.wireguard.com/install/) auf dem lokalen Notebook/PC installieren.
 
-Vervollständigen der WireGuard Template Datei, z.B. `wg1-template.conf` mit Ihrer WireGuard IP-Adresse und dem privaten Key.
+Vervollständigen der WireGuard Template Datei, z.B. `wg131-template.conf` mit Ihrer WireGuard IP-Adresse und dem privaten Key.
 
 Dazu sind die Einträge <replace IP> und <replace Key> durch Ihre Werte, laut der Liste in den Unterlagen, zu ersetzen.
 
@@ -88,8 +88,6 @@ Beim Aufsetzen der [lernMAAS](https://github.com/mc-b/lernmaas) Umgebung haben w
 Ein [VM Hosts](https://maas.io/docs/snap/2.9/ui/adding-a-vm-host) ist eine Maschine, auf der virtuelle Maschinen (VMs) ausgeführt werden. Standardmässig verwendet MAAS dazu [KVM](https://www.linux-kvm.org/).
 
 Über den Tab `KVM` im MAAS UI ist zuerst ein VM Host auszuwählen und dort die VMs zu [erstellen](https://maas.io/docs/snap/2.9/ui/creating-and-deleting-vms#heading--add-vm-from-ui).
-
-**Hinweis**: bei mehreren Mandanten verwenden Sie einen anderen Prefix als "XYZ" und beginnen die Nummerierung bei 20.
 
 **Links**
 
@@ -243,7 +241,7 @@ Beispiel für Scripts sind:
 
 Dazu benötigen wir zuerst eine VM mit Kubernetes und einem Container Runtime.
 
-Dazu erstellen wir eine neue VM mit 2 CPU Cores, 4096 GB RAM und 16 GB Storage. Der Name der VM lautet `XYZ-16-kaas> (XYZ durch eigenes Kürzel ersetzen und Nummer durch eigenen Nummernbereich).
+Dazu erstellen wir eine neue VM mit 2 CPU Cores, 4096 GB RAM und 16 GB Storage. Der Name der VM lautet `XYZ-16-kaas> (XYZ durch eigenes Kürzel ersetzen).
 
 Deployt wird die VMs mit folgenden `Cloud-init` Script:
 
@@ -274,14 +272,8 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
       - microk8s kubectl apply -f https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless-$RELEASE.yaml
       - cd /tmp; curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless_linux-amd64.zip && unzip kubeless_linux-amd64.zip
       - sudo mv /tmp/bundles/kubeless_linux-amd64/kubeless /usr/local/bin/
-      - export HNC_VERSION=v0.7.0
-      - export HNC_PLATFORM=linux_amd64
-      - microk8s kubectl apply -f https://github.com/kubernetes-sigs/multi-tenancy/releases/download/hnc-${HNC_VERSION}/hnc-manager.yaml
-      - curl -L https://github.com/kubernetes-sigs/multi-tenancy/releases/download/hnc-${HNC_VERSION}/kubectl-hns_${HNC_PLATFORM} -o /tmp/kubectl-hns
-      - chmod +x /tmp/kubectl-hns
-      - sudo mv /tmp/kubectl-hns /usr/local/bin
    
-Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes. Und zum Schluss die Kubernetes Erweiterung für [Hierarchische Kubernetes Namespaces](https://kubernetes.io/blog/2020/08/14/introducing-hierarchical-namespaces/).
+Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes.
 
 Nach der Installation, sind wir bereit Container zu starten. Dazu müssen wir uns mittels [Secure Shell (ssh)](https://de.wikipedia.org/wiki/Secure_Shell) mit der VM verbinden. Dazu eignet sich am besten [bitvise](https://www.bitvise.com/).
 
@@ -346,10 +338,8 @@ Durch die Verwendung von Kubernetes Namespaces und Container (Pods) können wir,
 - - -
 
     export MANDANT=xyz
-    kubectl create namespace ${MANDANT}
-    kubectl hns set ${MANDANT} --allowCascadingDeletion
-    kubectl-hns create evv-${MANDANT} -n ${MANDANT}
-    kubectl-hns create rw-${MANDANT}  -n ${MANDANT}
+    kubectl create namespace evv-${MANDANT}
+    kubectl create namespace rw-${MANDANT}  
     
     export NAMESPACE=evv
     for func in lieferanten kunden produkte bestellungen
@@ -444,12 +434,10 @@ Dazu erstellen wir ein einfaches Script, zu Testzwecken, welches wir für alle C
 Diese Function können wir nun für all unsere Container veröffentlichen:
 
     export MANDANT=xyz
-    kubectl create namespace ${MANDANT}
-    kubectl hns set ${MANDANT} --allowCascadingDeletion
-    kubectl-hns create evv-${MANDANT} -n ${MANDANT}
-    kubectl-hns create rw-${MANDANT}  -n ${MANDANT}    
+    kubectl create namespace faas-evv-${MANDANT}
+    kubectl create namespace faas-rw-${MANDANT} 
     
-    export NAMESPACE=evv
+    export NAMESPACE=faas-evv
     export func="lieferanten"
     kubeless function deploy ${func} --runtime python2.7 \
                                      --from-file function.py \
