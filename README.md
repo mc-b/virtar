@@ -253,10 +253,10 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
         home: /home/ubuntu
         shell: /bin/bash
         lock_passwd: false
-        plain_text_passwd: 'password'        
+        plain_text_passwd: 'password'
     # login ssh and console with password
     ssh_pwauth: true
-    disable_root: false    
+    disable_root: false
     packages:
       - unzip
     runcmd:
@@ -266,13 +266,13 @@ Deployt wird die VMs mit folgenden `Cloud-init` Script:
       - sudo mkdir -p /home/ubuntu/.kube
       - sudo microk8s config >/home/ubuntu/.kube/config
       - sudo chown -f -R ubuntu /home/ubuntu/.kube
-      - sudo snap install kubectl --classic 
-      - curl https://raw.githubusercontent.com/mc-b/duk/master/addons/dashboard-skip-login-no-ingress.yaml | sed 's/hostPort: 443/hostPort: 8443/g'  | microk8s kubectl apply -f -
-      - export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
+      - sudo snap install kubectl --classic
+      - export RELEASE=v1.0.8
       - microk8s kubectl create ns kubeless
-      - microk8s kubectl apply -f https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless-$RELEASE.yaml
-      - cd /tmp; curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless_linux-amd64.zip && unzip kubeless_linux-amd64.zip
+      - microk8s kubectl create -f https://github.com/kubeless/kubeless/releases/download/${RELEASE}/kubeless-non-rbac-${RELEASE}.yaml       
+      - cd /tmp; curl -OL https://github.com/kubeless/kubeless/releases/download/${RELEASE}/kubeless_linux-amd64.zip && unzip kubeless_linux-amd64.zip
       - sudo mv /tmp/bundles/kubeless_linux-amd64/kubeless /usr/local/bin/
+
    
 Das installiert zuerst [microk8s](https://microk8s.io/), die Kubernetes Distribution von Ubuntu. Dann [kubeless](https://kubeless.io/), ein Serverless Framework für Kubernetes.
 
@@ -407,7 +407,8 @@ Und im Browser, in dem wir die URL https://<ip-cluster/${MANDANT}/lieferanten ö
 
 Um Schluss können wir die ganze Umgebung wieder löschen:
 
-    kubectl delete namespace ${MANDANT}
+    kubectl delete namespace evv-${MANDANT}
+    kubectl delete namespace rw-${MANDANT} 
     
 ### Serverless
 ***
@@ -440,7 +441,7 @@ Diese Function können wir nun für all unsere Container veröffentlichen:
     
     export NAMESPACE=faas-evv
     export func="lieferanten"
-    kubeless function deploy ${func} --runtime python2.7 \
+    kubeless function deploy ${func} --runtime python3.6 \
                                      --from-file function.py \
                                      --handler ${func}.myfunction \
                                      --namespace ${NAMESPACE}-${MANDANT}
