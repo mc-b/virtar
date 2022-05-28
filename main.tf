@@ -16,7 +16,7 @@ module "master" {
   description = "Virtualisierung über Cloud und Container bis Serverless (VIRTAR)"
   userdata    = "cloud-init.yaml"
 
-  cores   = 4
+  cores   = 8
   memory  = 16
   storage = 32
   # SSH, Kubernetes, NFS
