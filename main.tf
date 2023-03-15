@@ -11,10 +11,11 @@ module "master" {
   #source     = "git::https://github.com/mc-b/terraform-lerncloud-lernmaas"  
   #source     = "git::https://github.com/mc-b/terraform-lerncloud-aws"
   #source     = "git::https://github.com/mc-b/terraform-lerncloud-azure" 
+  #source     = "git::https://github.com/mc-b/terraform-lerncloud-proxmox"    
 
   module      = "virtar-${var.host_no}-${terraform.workspace}"
   description = "Virtualisierung über Cloud und Container bis Serverless (VIRTAR)"
-  userdata    = "cloud-init.yaml"
+  userdata    = "cloud-init-virtar.yaml"
 
   cores   = 4
   memory  = 16
