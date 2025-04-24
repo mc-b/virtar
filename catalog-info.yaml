@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: virtar
+  namespace: mc-b
+  description: Von der Virtualisierung über Cloud und Container bis Serverless («VIRTAR»)
+  tags: []
+  links:
+  - url: https://github.com/mc-b/virtar
+    title: Repository
+    icon: github
+  annotations:
+    github.com/project-slug: mc-b/virtar
+    backstage.io/source-location: url:https://github.com/mc-b/virtar
+    # backstage.io/techdocs-ref: url:https://github.com/mc-b/virtar
+spec:
+  type: education
+  lifecycle: deprecated
+  owner: group:mc-b/mc-b
