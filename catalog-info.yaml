@@ -4,7 +4,8 @@ metadata:
   name: virtar
   namespace: mc-b
   description: Von der Virtualisierung über Cloud und Container bis Serverless («VIRTAR»)
-  tags: []
+  tags:
+  - digicomp
   links:
   - url: https://github.com/mc-b/virtar
     title: Repository
