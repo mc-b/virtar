@@ -6,6 +6,7 @@ metadata:
   description: Von der Virtualisierung über Cloud und Container bis Serverless («VIRTAR»)
   tags:
   - digicomp
+  - education
   links:
   - url: https://github.com/mc-b/virtar
     title: Repository
@@ -15,6 +16,6 @@ metadata:
     backstage.io/source-location: url:https://github.com/mc-b/virtar
     # backstage.io/techdocs-ref: url:https://github.com/mc-b/virtar
 spec:
-  type: education
+  type: website
   lifecycle: deprecated
   owner: group:mc-b/mc-b
